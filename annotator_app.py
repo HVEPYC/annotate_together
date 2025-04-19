@@ -12,7 +12,6 @@ import os
 import glob
 import math
 import datetime
-import uuid
 from collections import defaultdict # Useful for loading
 import shutil
 import git
@@ -33,7 +32,7 @@ DIFFICULTY_LEVELS = ["easy", "medium", "hard"]
 
 # --- Function for Git Repo Management
 def pull_repo_new():
-    return git.Repo.clone_from("https://github.com/HVEPYC/annotations",GIT_OUTPUT_DIR)
+    git.Repo.clone_from("https://github.com/HVEPYC/annotations",GIT_OUTPUT_DIR)
 
 def pull_repo_exist():
     annotations_git = git.cmd.Git(GIT_OUTPUT_DIR)
