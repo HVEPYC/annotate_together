@@ -1,3 +1,6 @@
 /work_venv
 test*
 *.code-workspace
+/annotations
+/temp*
+__pycache__
