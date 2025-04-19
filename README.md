@@ -40,6 +40,4 @@ This app was created with the help of Gemini 2.5 Pro Preview, and various docume
     ```
     *This command reads the `requirements.txt` file and installs all the Python packages listed in it.*
 
-## Further Info:
-
-This app required
+## Made by CVPR Group 5
