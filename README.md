@@ -3,6 +3,7 @@
 This is an app that allows for annotations to be made on image data from any given directory
 
 (NOTE 1): This is release v0.1 of the app, so if any errors exist, feel free to send a PR
+
 (NOTE 2): This app relies on the fact that your Github account has access to the private "annotations" repository. Feel free to contact me on known channels to enable access for the same
 
 This app was created with the help of Gemini 2.5 Pro Preview, and various documentations found online. It was made in less than a day, so if features are found to be broken, please do let me know via a PR.
