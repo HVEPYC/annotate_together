@@ -1,4 +1,4 @@
-# Annotate-Anything by CVPR Group 5 "Strix Halo"
+# Annotate-Together by CVPR Group 5 "Strix Halo"
 
 This is an app that allows for annotations to be made on image data from any given directory
 
