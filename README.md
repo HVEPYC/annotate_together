@@ -17,7 +17,7 @@ This app was created with the help of Gemini 2.5 Pro Preview, and various docume
 1.  **Clone the repository (optional, if they don't have it yet):**
     ```bash
     git clone https://github.com/HVEPYC/annotate_together
-    cd your-project
+    cd annotate_together
     ```
 
 2.  **(Optional but Recommended) Create and activate a virtual environment:**
