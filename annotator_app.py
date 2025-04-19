@@ -11,6 +11,7 @@ import math
 import datetime
 import uuid
 from collections import defaultdict # Useful for loading
+import shutil
 
 # --- Configuration ---
 OUTPUT_DIR = "annotations"
@@ -19,6 +20,7 @@ SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff']
 MIN_PLOT_HEIGHT = 720.0
 IMAGE_SUBDIR = "images_dir"
 
+# --- Annotator Specific Info ---
 TASK_TYPES = ["caption", "vqa", "instruction"]
 SPLIT_TYPES = ["train", "val", "test"]
 DIFFICULTY_LEVELS = ["easy", "medium", "hard"]
@@ -99,11 +101,11 @@ def load_existing_annotations():
                     print(f"Warning: Skipping annotation due to missing image_path/image_id: {item}")
                     continue
 
-                # Basic check for overall duplicate image_ids
-                if image_id in image_ids_seen_overall:
-                     print(f"Warning: Duplicate image_id '{image_id}' found across dataset. Check data integrity. Skipping duplicate entry.")
-                     continue
-                image_ids_seen_overall.add(image_id)
+                # # Basic check for overall duplicate image_ids
+                # if image_id in image_ids_seen_overall:
+                #      print(f"Warning: Duplicate image_id '{image_id}' found across dataset. Check data integrity. Skipping duplicate entry.")
+                #      continue
+                # image_ids_seen_overall.add(image_id)
 
                 # Derive filename (handle potential path separator differences)
                 filename = os.path.basename(image_path.replace(f"{IMAGE_SUBDIR}/", "").replace(f"{IMAGE_SUBDIR}\\", ""))
@@ -161,6 +163,7 @@ def clear_plot_drawings(clear_image=False):
         if texture_id and dpg.does_item_exist(current_texture_tag): dpg.delete_item(current_texture_tag)
         texture_id = None
 
+# --- This also helps in deleting Bboxes, essentially refreshes the entire display ---
 def draw_annotations_on_plot(): # Draws bboxes for the *selected* entry
     global drawn_items
     clear_plot_drawings(clear_image=False)
@@ -372,11 +375,16 @@ def directory_selected_callback(sender, app_data):
     if app_data['file_path_name']:
         selected_directory = app_data['file_path_name']
         dpg.set_value("directory_text", f"Selected: {selected_directory}")
+        print(f"Selected directory: {selected_directory}")
         image_files = []
         for ext in SUPPORTED_EXTENSIONS:
             image_files.extend(glob.glob(os.path.join(selected_directory, f"*{ext}")))
             image_files.extend(glob.glob(os.path.join(selected_directory, f"*{ext.upper()}")))
         image_files = sorted(list(set(image_files)))
+
+        # --- Load annotations FIRST ---
+        # load_existing_annotations() # Ensure annotations are loaded to check against
+
         if not image_files:
             update_status(f"No supported images found in {selected_directory}")
             update_filename_display(None); current_image_index = -1; points, rectangles, selected_annotation_index = [], [], -1
@@ -384,10 +392,26 @@ def directory_selected_callback(sender, app_data):
             if dpg.does_item_exist(annotation_entry_combo): dpg.configure_item(annotation_entry_combo, items=[], default_value=None)
         else:
             print(f"Found {len(image_files)} images.")
-            current_image_index = 0
-            load_image_texture(image_files[current_image_index]) # Loads image & first entry
+
+            # --- > Determine starting index <---
+            start_index = 0 # Default to first image
+            for idx, img_path in enumerate(image_files):
+                filename = os.path.basename(img_path)
+                # Check if filename is NOT in annotations or if its entry list IS empty
+                if filename not in all_annotations or not all_annotations.get(filename):
+                    start_index = idx
+                    print(f"Starting at first unannotated image: {filename} (index {start_index})")
+                    break # Found the first one, stop searching
+            else: # Loop completed without break (all images have annotations)
+                 print("All images seem to have existing annotations. Starting at the first image.")
+                 start_index = 0 # Explicitly start at 0 if all are annotated
+
+            current_image_index = start_index
+            load_image_texture(image_files[current_image_index]) # Loads image & potentially its first entry
+
         update_navigation_buttons()
     else: print("Directory selection cancelled.")
+
 
 def mouse_click_callback(sender, app_data): # Modifies `rectangles` and updates selected entry's bbox
     global points, rectangles
@@ -673,6 +697,35 @@ def save_annotations_callback():
         import traceback; traceback.print_exc()
 
 
+# --- > NEW: Callback for "Remove Last BBox" button ---
+def remove_last_bbox_callback():
+    """Removes the last added bounding box from the current internal list,
+       updates the plot, and updates the stored data."""
+    global rectangles # We directly modify the list for the selected entry
+
+    if current_image_index == -1 or selected_annotation_index == -1:
+        update_status("No annotation entry selected to remove bounding box from.")
+        return
+
+    if rectangles: # Check if there are any rectangles to remove
+        removed_bbox = rectangles.pop() # Remove the last element
+        print(f"Removed last bounding box: {removed_bbox}")
+
+        # Update the plot display
+        draw_annotations_on_plot()
+
+        # Update the stored bbox data in all_annotations for the selected entry
+        update_selected_annotation_bboxes()
+
+        # Update status
+        update_status(f"Removed last bounding box. {len(rectangles)} remaining.")
+        # update_filename_display will be called by update_selected_annotation_bboxes
+
+    else:
+        update_status("No bounding boxes to remove for the selected entry.")
+        print("No bounding boxes to remove.")
+
+
 def clear_callback(): # Clears the *selected* annotation entry
     global points, rectangles, selected_annotation_index
     if current_image_index != -1 and selected_annotation_index != -1:
@@ -726,6 +779,67 @@ def prev_image_callback():
         current_image_index -= 1
         load_image_texture(image_files[current_image_index])
 
+
+# --- > RENAMED and MODIFIED: Function to run on exit ---
+def move_annotated_images_on_exit():
+    """Moves images with existing annotations to an 'annotated' subfolder."""
+    print("Exit callback triggered: Checking for annotated images to move...")
+
+    if not selected_directory:
+        print("No directory was selected. Skipping image move.")
+        return
+
+    if not all_annotations:
+        print("No annotations found in memory. Nothing to move.")
+        return
+
+    target_dir = os.path.join(selected_directory, "annotated")
+
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+        print(f"Ensured 'annotated' directory exists at: {target_dir}")
+
+        moved_count = 0 # Renamed counter
+        skipped_count = 0
+
+        # Use list(all_annotations.keys()) to avoid issues if modifying dict during iteration (though unlikely here)
+        for filename in list(all_annotations.keys()):
+            if all_annotations.get(filename): # Check for non-empty entry list
+                source_path = os.path.join(selected_directory, filename)
+                dest_path = os.path.join(target_dir, filename)
+
+                if os.path.exists(source_path):
+                    try:
+                        # --- > Use shutil.move instead of copy2 <---
+                        print(f"Moving '{filename}' to '{target_dir}'...")
+                        shutil.move(source_path, dest_path)
+                        moved_count += 1 # Updated counter name
+                    # Handle potential error if destination already exists (though shouldn't happen with unique names)
+                    except FileExistsError:
+                         print(f"  Skipping '{filename}': File already exists in destination '{target_dir}'.")
+                         skipped_count += 1
+                    except Exception as move_err:
+                        print(f"  Error moving '{filename}': {move_err}")
+                        skipped_count += 1
+                else:
+                    # This case is less likely if the image was just loaded, but good to keep
+                    print(f"  Skipping '{filename}': Source file not found at '{source_path}'.")
+                    skipped_count += 1
+
+        print("-" * 20)
+        if moved_count > 0:
+            # Updated print statement
+            print(f"Successfully moved {moved_count} annotated image(s) to '{target_dir}'.")
+        if skipped_count > 0:
+             print(f"Skipped {skipped_count} image(s) due to errors or missing source.")
+        if moved_count == 0 and skipped_count == 0:
+            print("No annotated images needed moving (or none found).")
+        print("-" * 20)
+
+    except Exception as e:
+        print(f"An error occurred during the image moving process: {e}")
+
+
 # --- DPG Setup ---
 dpg.create_context()
 dpg.add_texture_registry(tag=texture_registry_id)
@@ -767,6 +881,7 @@ with dpg.window(label="Image Annotator (Multi-Entry)", width=initial_window_widt
     # Mid Row 2: Save/Clear/Nav Buttons
     with dpg.group(horizontal=True):
         dpg.add_button(label="Save All Annotations", callback=save_annotations_callback, tag="save_button", enabled=False)
+        dpg.add_button(label="Remove Last BBox", callback=remove_last_bbox_callback, tag="remove_last_bbox_button")
         dpg.add_button(label="Clear Selected Entry Data", callback=clear_callback, tag="clear_button") # Clarified label
         dpg.add_button(label="<< Previous Image", callback=prev_image_callback, tag="prev_button", enabled=False)
         dpg.add_button(label="Next Image >>", callback=next_image_callback, tag="next_button", enabled=False)
@@ -820,6 +935,7 @@ with dpg.handler_registry():
 # --- DPG Viewport and Execution ---
 dpg.create_viewport(title='Dear PyGui Multi-Entry Annotator', width=initial_window_width+20, height=initial_window_height+20, resizable=True)
 dpg.setup_dearpygui()
+dpg.set_exit_callback(move_annotated_images_on_exit)
 dpg.show_viewport()
 dpg.set_primary_window(main_window_tag, True)
 dpg.start_dearpygui()
@@ -831,3 +947,6 @@ dpg.destroy_context()
 #   - above is to ensure no filename conflicts for images
 #   - Implement by running a check script in the beginning that renames images in the selected directory as necessary first, before annotating the images in case of conflicts
 # Add method to pull latest version of annotations and push latest version of the same
+
+# DONE:
+# Implemented a method to remove the last bounding box drawn on the image
