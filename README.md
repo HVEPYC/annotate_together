@@ -1,4 +1,4 @@
-# Annotate-Together by CVPR Group 5 "Strix Halo"
+# Annotate-Together by WID3013 CVPR Group 5 "Strix Halo"
 
 This is an app that allows for annotations to be made on image data from any given directory
 
@@ -41,4 +41,4 @@ This app was created with the help of Gemini 2.5 Pro Preview, and various docume
     ```
     *This command reads the `requirements.txt` file and installs all the Python packages listed in it.*
 
-## Made by CVPR Group 5
+## Made by WID3013 CVPR Group 5
