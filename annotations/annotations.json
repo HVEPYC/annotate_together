@@ -1,0 +1,187 @@
+[
+    {
+        "image_id": "2_1",
+        "image_path": "images_dir/2.png",
+        "task_type": "vqa",
+        "text_ms": "asdas",
+        "answer_ms": "sdasdsd",
+        "text_en": "d",
+        "answer_en": "assdasd",
+        "language": {
+            "source": [
+                "ms",
+                "en"
+            ],
+            "target": [
+                "ms",
+                "en"
+            ]
+        },
+        "source": "sdbahdsb",
+        "split": "test",
+        "difficulty": "easy",
+        "tags": [
+            "animal",
+            "outdoor"
+        ],
+        "bbox": [
+            [
+                1671,
+                1767,
+                2532,
+                2433
+            ],
+            [
+                2875,
+                1781,
+                3615,
+                2360
+            ],
+            [
+                3634,
+                1221,
+                4824,
+                1950
+            ],
+            [
+                3764,
+                1829,
+                5009,
+                2544
+            ],
+            [
+                5333,
+                1303,
+                6365,
+                1897
+            ],
+            [
+                4444,
+                111,
+                4995,
+                879
+            ],
+            [
+                4856,
+                1723,
+                6060,
+                2568
+            ]
+        ],
+        "metadata": {
+            "license": "CC-BY",
+            "annotator_id": "hari",
+            "language_quality_score": 0.5,
+            "timestamp": "2025-04-19T10:55:45Z"
+        }
+    },
+    {
+        "image_id": "2_2",
+        "image_path": "images_dir/2.png",
+        "task_type": "vqa",
+        "text_ms": "sdad",
+        "answer_ms": "asdasdawd",
+        "text_en": "ddasdasd",
+        "answer_en": "wdawdawsd",
+        "language": {
+            "source": [
+                "ms",
+                "en"
+            ],
+            "target": [
+                "ms",
+                "en"
+            ]
+        },
+        "source": "sdbahdsb",
+        "split": "val",
+        "difficulty": "hard",
+        "tags": [
+            "as",
+            "bs",
+            "cs"
+        ],
+        "bbox": [
+            [
+                1324,
+                1081,
+                2352,
+                1844
+            ],
+            [
+                3481,
+                1043,
+                4981,
+                1911
+            ],
+            [
+                4481,
+                135,
+                5046,
+                608
+            ],
+            [
+                5106,
+                1158,
+                6314,
+                1786
+            ],
+            [
+                4972,
+                1791,
+                5935,
+                2404
+            ],
+            [
+                4018,
+                1714,
+                4754,
+                2515
+            ],
+            [
+                4254,
+                2389,
+                5490,
+                2969
+            ]
+        ],
+        "metadata": {
+            "license": "CC-BY",
+            "annotator_id": "hari",
+            "language_quality_score": 0.4000000059604645,
+            "timestamp": "2025-04-19T10:56:18Z"
+        }
+    },
+    {
+        "image_id": "test_1",
+        "image_path": "images_dir/test.png",
+        "task_type": "caption",
+        "text_ms": "",
+        "answer_ms": "",
+        "text_en": "adawd",
+        "answer_en": "dawd",
+        "language": {
+            "source": [
+                "ms",
+                "en"
+            ],
+            "target": [
+                "ms",
+                "en"
+            ]
+        },
+        "source": "sdbahdsb",
+        "split": "train",
+        "difficulty": "easy",
+        "tags": [
+            "adwadwaf"
+        ],
+        "bbox": [],
+        "metadata": {
+            "license": "CC-BY",
+            "annotator_id": "hari",
+            "language_quality_score": 0.0,
+            "timestamp": "2025-04-19T10:57:20Z"
+        }
+    }
+]

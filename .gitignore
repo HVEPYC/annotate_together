@@ -1,2 +1,3 @@
 /work_venv
 test*
+*.code-workspace
