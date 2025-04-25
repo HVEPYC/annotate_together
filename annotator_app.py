@@ -39,11 +39,13 @@ def pull_repo_exist():
     annotations_git.pull()
 
 def pull_annotations_repo():
+    print("Pulling latest Annotations from GitHub")
     """Pulls the latest annotations file from Github"""
     if os.path.exists(GIT_OUTPUT_DIR) == False:
         pull_repo_new()
     else:
         pull_repo_exist()
+    print("Latest annotations pulled from GitHub")
 
 # Before anything is done, clone the Annotations repo or pull latest changes
 pull_annotations_repo()
