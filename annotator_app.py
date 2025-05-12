@@ -24,6 +24,7 @@ ANNOTATION_FILENAME = "temp_annotations.json"
 SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff']
 MIN_PLOT_HEIGHT = 720.0
 IMAGE_SUBDIR = "images_dir"
+DEFAULT_LANGUAGE_SCORE = 10
 
 # --- Annotator Specific Info ---
 TASK_TYPES = ["caption", "vqa", "instruction"]
@@ -269,9 +270,9 @@ def update_selected_annotation_data(field_tag, new_value):
         elif field_tag == split_combo: entry_data["split"] = new_value
         elif field_tag == difficulty_combo: entry_data["difficulty"] = new_value
         elif field_tag == tags_input: entry_data["tags"] = [tag.strip() for tag in new_value.split(',') if tag.strip()]
-        elif field_tag == lang_score_input:
-             try: entry_data.setdefault("metadata", {})["language_quality_score"] = float(new_value)
-             except (ValueError, TypeError): entry_data.setdefault("metadata", {})["language_quality_score"] = 0.0
+        # elif field_tag == lang_score_input:
+        #      try: entry_data.setdefault("metadata", {})["language_quality_score"] = float(new_value)
+        #      except (ValueError, TypeError): entry_data.setdefault("metadata", {})["language_quality_score"] = 0.0
         # Persistent fields (annotator_id, source) are handled separately if needed (e.g., when creating new)
         # BBoxes are updated elsewhere (mouse_click_callback)
 
@@ -701,7 +702,7 @@ def new_annotation_entry_callback():
         "source": source_value, "split": SPLIT_TYPES[0], "difficulty": DIFFICULTY_LEVELS[0],
         "tags": [], "bbox": [],
         "metadata": { "license": "CC-BY-SA", "annotator_id": annotator_id_value,
-                     "language_quality_score": 0.0, "timestamp": timestamp }
+                     "language_quality_score": 10.0, "timestamp": timestamp }
     }
 
     if filename not in all_annotations: all_annotations[filename] = []
@@ -1058,8 +1059,8 @@ with dpg.window(label="Image Annotator (Multi-Entry)", width=initial_window_widt
         dpg.add_combo(SPLIT_TYPES, default_value=SPLIT_TYPES[0], width=100, tag=split_combo, callback=update_selected_annotation_data)
         dpg.add_spacer(width=20); dpg.add_text("Difficulty:")
         dpg.add_combo(DIFFICULTY_LEVELS, default_value=DIFFICULTY_LEVELS[0], width=100, tag=difficulty_combo, callback=update_selected_annotation_data)
-        dpg.add_spacer(width=20); dpg.add_text("Lang. Score:")
-        dpg.add_input_float(width=80, default_value=0.0, step=0.1, format="%.1f", tag=lang_score_input, callback=update_selected_annotation_data)
+        # dpg.add_spacer(width=20); dpg.add_text("Lang. Score:")
+        # dpg.add_input_float(width=80, default_value=0.0, step=0.1, format="%.1f", tag=lang_score_input, callback=update_selected_annotation_data)
 
     # Text Inputs (with callbacks)
     with dpg.group(horizontal=True):
