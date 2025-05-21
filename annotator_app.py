@@ -228,7 +228,7 @@ def load_ui_from_selected_entry():
         dpg.set_value(difficulty_combo, current_annotation_data.get("difficulty", DIFFICULTY_LEVELS[0]))
         dpg.set_value(tags_input, ", ".join(current_annotation_data.get("tags", [])))
         score = current_annotation_data.get("metadata", {}).get("language_quality_score", 0.0)
-        dpg.set_value(lang_score_input, float(score) if score is not None else 0.0)
+        #dpg.set_value(lang_score_input, float(score) if score is not None else 0.0)
 
         # Load bounding boxes into the global `rectangles` list
         bbox_list = current_annotation_data.get("bbox", [])
@@ -306,7 +306,7 @@ def reset_input_fields(): # Keep persistent fields
     if dpg.does_item_exist(split_combo): dpg.set_value(split_combo, SPLIT_TYPES[0])
     if dpg.does_item_exist(difficulty_combo): dpg.set_value(difficulty_combo, DIFFICULTY_LEVELS[0])
     if dpg.does_item_exist(tags_input): dpg.set_value(tags_input, "")
-    if dpg.does_item_exist(lang_score_input): dpg.set_value(lang_score_input, 0.0)
+    #if dpg.does_item_exist(lang_score_input): dpg.set_value(lang_score_input, 0.0)
     draw_annotations_on_plot() # Clear drawn boxes too
 
 # --- > MODIFIED: Loads image, populates entry combo, loads first entry ---
@@ -972,25 +972,28 @@ def housekeeping_work_on_exit():
         git_annotations = json.load(file)
     # Then add all the existing annotations from temp_annotations into git_annotations
     temp_annot_filepath = os.path.join(OUTPUT_DIR, ANNOTATION_FILENAME)
-    with open(temp_annot_filepath, 'r') as file2:
-        temp_annotations = json.load(file2)
-    for i in temp_annotations:
-        git_annotations.append(i)
-    # Then dump git_annotations json file:
-    with open(git_annot_filepath, 'w') as f: json.dump(git_annotations, f, indent=4)
-    # Commit changes to the new item
-    repo = git.Repo(GIT_OUTPUT_DIR)
-    files = repo.git.diff(None, name_only = True)
-    for f in files.split('\n'):
-        repo.git.add(f)
-    repo.git.commit("-m","Annotations Added")
-    # Then Push changes to github
-    repo.remotes.origin.push()
-    # Completed Work
-    print("New annotations added to Annotations Github")
-    
-    # Delete test_annotations folder
-    shutil.rmtree(OUTPUT_DIR)
+    # Check if the file exists even
+    if os.path.exists(temp_annot_filepath):
+        with open(temp_annot_filepath, 'r') as file2:
+            temp_annotations = json.load(file2)
+        for i in temp_annotations:
+            git_annotations.append(i)
+        # Then dump git_annotations json file:
+        with open(git_annot_filepath, 'w') as f: json.dump(git_annotations, f, indent=4)
+        # Commit changes to the new item
+        repo = git.Repo(GIT_OUTPUT_DIR)
+        files = repo.git.diff(None, name_only = True)
+        for f in files.split('\n'):
+            repo.git.add(f)
+        repo.git.commit("-m","Annotations Added")
+        # Then Push changes to github
+        repo.remotes.origin.push()
+        # Completed Work
+        print("New annotations added to Annotations Github")
+        # Delete test_annotations folder
+        shutil.rmtree(OUTPUT_DIR)
+    else:
+        print("No Temp Annotations, Indicating no annotations added, Hence closing")
 
 
 # --- DPG Setup ---
