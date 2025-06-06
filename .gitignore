@@ -4,3 +4,4 @@ test*
 /annotations
 /temp*
 __pycache__
+annotated_data.pdf
